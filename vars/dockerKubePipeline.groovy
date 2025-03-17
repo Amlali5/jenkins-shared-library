@@ -4,14 +4,13 @@ def call(Map config) {
         stages {
             stage('Clone Repository') {
                 steps {
-                    echo 'Cloning repository...'
                     checkout([$class: 'GitSCM', branches: [[name: config.branch]],
                               userRemoteConfigs: [[url: config.repositoryUrl, credentialsId: config.gitCredentialsId]]])
                 }
             }
             stage('Verify Files') { 
                 steps {
-                    echo 'Verifying if static_website directory exists...'
+                    echo 'Checking if static_website directory exists...'
                     sh 'ls -la jenkins/lab3 || echo "Directory not found!"'
                 }
             }
@@ -20,7 +19,6 @@ def call(Map config) {
                     echo 'Preparing build context...'
                     sh '''
                     if [ ! -d "jenkins/lab3/static_website" ]; then
-                        echo "Creating static_website directory and copying files..."
                         mkdir -p jenkins/lab3/static_website
                         cp -r /path/to/static_website/* jenkins/lab3/static_website/
                     else
@@ -31,7 +29,6 @@ def call(Map config) {
             }
             stage('Build Docker Image') {
                 steps {
-                    echo 'Building Docker image...'
                     sh "docker build -t ${config.dockerImageName}:${config.dockerImageTag} -f ${config.dockerFilePath} ."
                 }
             }
@@ -48,13 +45,11 @@ def call(Map config) {
             }
             stage('Remove Local Docker Image') {
                 steps {
-                    echo 'Removing local Docker image...'
-                    sh "docker rmi ${config.dockerImageName}:${config.dockerImageTag} || echo 'Image not found locally.'"
+                    sh "docker rmi ${config.dockerImageName}:${config.dockerImageTag}"
                 }
             }
             stage('Deploy to Kubernetes') {
                 steps {
-                    echo 'Deploying to Kubernetes...'
                     withCredentials([string(credentialsId: config.k8sTokenCredentialsId, variable: 'K8S_TOKEN')]) {
                         sh "kubectl --token=$K8S_TOKEN apply -f ${config.kubeDeploymentFile}"
                     }
@@ -63,6 +58,7 @@ def call(Map config) {
         }
     }
 }
+
 
 
 
