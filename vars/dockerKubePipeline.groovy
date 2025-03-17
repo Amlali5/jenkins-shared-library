@@ -4,7 +4,8 @@ def call(Map config) {
         stages {
             stage('Clone Repository') {
                 steps {
-                    checkout([$class: 'GitSCM', branches: [[name: config.branch]],
+                    checkout([$class: 'GitSCM', 
+                              branches: [[name: config.branch]],
                               userRemoteConfigs: [[url: config.repositoryUrl, credentialsId: config.gitCredentialsId]]])
                 }
             }
@@ -49,12 +50,13 @@ def call(Map config) {
                 steps {
                     withCredentials([string(credentialsId: 'k8s-token', variable: 'K8S_TOKEN')]) {
                         sh "kubectl --token=$K8S_TOKEN apply -f ${config.kubeDeploymentFile}"
+                    }
+                }
+            }
         }
     }
 }
-        }
-    }
-} 
+
 
 
 
