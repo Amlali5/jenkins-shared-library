@@ -48,7 +48,7 @@ def call(Map config) {
             }
             stage('Deploy to Kubernetes') {
                 steps {
-                    withCredentials([file(credentialsId: 'minikube-kubeconfig', variable: 'KUBECONFIG')]) {
+                    withCredentials([file(credentialsId: config.k8sTokenCredentialsId, variable: 'KUBECONFIG')]) {
                         sh '''
                         export KUBECONFIG=$KUBECONFIG
                         kubectl apply -f ${config.kubeDeploymentFile}
@@ -59,6 +59,7 @@ def call(Map config) {
         }
     }
 }
+
 
 
 
