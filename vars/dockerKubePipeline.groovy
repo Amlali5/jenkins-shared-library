@@ -10,7 +10,7 @@ def call(Map config) {
             }
             stage('Build Docker Image') {
                 steps {
-                    sh "docker build -t ${config.dockerImageName}:${config.dockerImageTag} ."
+                    sh "docker build -t ${config.imageName}:${config.dockerImageTag} -f jenkins/lab4/Dockerfile ."
                 }
             }
             stage('Push Docker Image') {
