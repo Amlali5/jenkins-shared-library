@@ -8,9 +8,28 @@ def call(Map config) {
                               userRemoteConfigs: [[url: config.repositoryUrl, credentialsId: config.gitCredentialsId]]])
                 }
             }
+            stage('Verify Files') { 
+                steps {
+                    echo 'Checking if static_website directory exists...'
+                    sh 'ls -la jenkins/lab3 || echo "Directory not found!"'
+                }
+            }
+            stage('Prepare Build Context') { 
+                steps {
+                    echo 'Preparing build context...'
+                    sh '''
+                    if [ ! -d "jenkins/lab3/static_website" ]; then
+                        mkdir -p jenkins/lab3/static_website
+                        cp -r /path/to/static_website/* jenkins/lab3/static_website/
+                    else
+                        echo "static_website directory already exists."
+                    fi
+                    '''
+                }
+            }
             stage('Build Docker Image') {
                 steps {
-                     sh "docker build -t ${config.dockerImageName}:${config.dockerImageTag} -f ${config.dockerFilePath} ."
+                    sh "docker build -t ${config.dockerImageName}:${config.dockerImageTag} -f ${config.dockerFilePath} ."
                 }
             }
             stage('Push Docker Image') {
@@ -36,4 +55,5 @@ def call(Map config) {
         }
     }
 }
+
 
