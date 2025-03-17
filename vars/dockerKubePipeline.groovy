@@ -4,29 +4,36 @@ def call(Map config) {
         stages {
             stage('Clone Repository') {
                 steps {
-                    checkout scm
+                    checkout([$class: 'GitSCM', branches: [[name: config.branch]],
+                              userRemoteConfigs: [[url: config.repositoryUrl, credentialsId: config.gitCredentialsId]]])
                 }
             }
             stage('Build Docker Image') {
                 steps {
-                    sh "docker build -t ${config.imageName} ."
+                    sh "docker build -t ${config.dockerImageName}:${config.dockerImageTag} ."
                 }
             }
             stage('Push Docker Image') {
                 steps {
-                    sh "docker push ${config.imageName}"
+                    withCredentials([usernamePassword(credentialsId: config.dockerHubCredentialsId, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                        sh "docker push ${config.dockerImageName}:${config.dockerImageTag}"
+                    }
                 }
             }
             stage('Remove Local Docker Image') {
                 steps {
-                    sh "docker rmi ${config.imageName}"
+                    sh "docker rmi ${config.dockerImageName}:${config.dockerImageTag}"
                 }
             }
             stage('Deploy to Kubernetes') {
                 steps {
-                    sh "kubectl apply -f ${config.deploymentFile}"
+                    withCredentials([string(credentialsId: config.k8sTokenCredentialsId, variable: 'K8S_TOKEN')]) {
+                        sh "kubectl --token=$K8S_TOKEN apply -f ${config.kubeDeploymentFile}"
+                    }
                 }
             }
         }
     }
 }
+
