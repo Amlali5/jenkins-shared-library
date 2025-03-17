@@ -34,12 +34,9 @@ def call(Map config) {
             }
             stage('Push Docker Image') {
                 steps {
-                    echo 'Pushing Docker image to registry...'
                     withCredentials([usernamePassword(credentialsId: config.dockerHubCredentialsId, usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                        sh '''
-                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                        docker push ${config.dockerImageName}:${config.dockerImageTag}
-                        '''
+                        sh "echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin"
+                        sh "docker push ${config.dockerImageName}:${config.dockerImageTag}"
                     }
                 }
             }
@@ -50,14 +47,14 @@ def call(Map config) {
             }
             stage('Deploy to Kubernetes') {
                 steps {
-                    withCredentials([string(credentialsId: config.k8sTokenCredentialsId, variable: 'K8S_TOKEN')]) {
+                    withCredentials([string(credentialsId: 'k8s-token', variable: 'K8S_TOKEN')]) {
                         sh "kubectl --token=$K8S_TOKEN apply -f ${config.kubeDeploymentFile}"
-                    }
-                }
-            }
         }
     }
 }
+        }
+    }
+} 
 
 
 
