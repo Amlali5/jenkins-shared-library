@@ -48,11 +48,16 @@ def call(Map config) {
             }
             stage('Deploy to Kubernetes') {
                 steps {
-                    withCredentials([file(credentialsId: config.k8sTokenCredentialsId, variable: 'KUBECONFIG')]) {
-                        sh '''
-                        export KUBECONFIG=$KUBECONFIG
-                        kubectl apply -f ${config.kubeDeploymentFile}
-                        '''
+                    withCredentials([file(credentialsId: 'minikube-kubeconfig', variable: 'KUBECONFIG')]) {
+                        script {
+                            sh """
+                                export KUBECONFIG=$KUBECONFIG
+                                kubectl config set-cluster minikube --server=${config.k8sServer} --insecure-skip-tls-verify
+                                kubectl config set-context minikube --cluster=minikube
+                                kubectl config use-context minikube
+                                kubectl apply -f ${config.kubeDeploymentFile} --validate=false
+                            """
+                        }
                     }
                 }
             }
